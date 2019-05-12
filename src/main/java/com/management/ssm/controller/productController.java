@@ -1,25 +1,21 @@
 package com.management.ssm.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.management.ssm.model.Product;
+import com.management.ssm.model.ProductCategory;
+import com.management.ssm.repository.productCategoryRepository;
+import com.management.ssm.repository.productRepository;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-
-import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.management.ssm.model.Product;
-import com.management.ssm.repository.productRepository;
-import com.management.ssm.repository.productTypeRepository;
+import java.util.List;
 @CrossOrigin
 @RestController
 @RequestMapping(value="/product")
@@ -27,7 +23,7 @@ public class productController {
 	@Autowired
 	private productRepository productrepository;
 	@Autowired
-	private productTypeRepository producttyperepository;
+	private productCategoryRepository productcategoryrepository;
 	
 //	Get all records including NOTACTIVE
 	@RequestMapping(method=RequestMethod.GET)
@@ -60,15 +56,22 @@ public class productController {
 		ObjectMapper mapper=new ObjectMapper();
 		Product product=new Product();
 		JSONObject object=new JSONObject(data);
-		if(!(object.has("name")&&object.has("purprice")&&object.has("saleprice")
-				&&object.has("type")&& object.has("stock")))
+		if(!(object.has("product_NAME")
+				&&object.has("product_PRICE")
+				&&object.has("productcategory_ID")
+				&&object.has("product_STOCK")
+				&&object.has("product_DESCRIPTION")))
 			return "Please enter all information";
 		//Entering data into object of a product
-		product.setPRODUCT_NAME(object.getString("name"));
-		product.setPRODUCTPURCHASE_PRICE(object.getDouble("purprice"));
-		product.setPRODUCTSALE_PRICE(object.getDouble("saleprice"));
-		product.setPRODUCT_STOCK(object.getDouble("stock"));
-		product.setPRODUCTTYPE_ID(producttyperepository.findOne(object.getLong("type")));
+		product.setPRODUCT_NAME(object.getString("product_NAME"));
+		product.setPRODUCT_PRICE(object.getDouble("product_PRICE"));
+		product.setPRODUCT_DESCRIPTION(object.getString("product_DESCRIPTION"));
+		product.setPRODUCT_STOCK(object.getDouble("product_STOCK"));
+		//Using Product Category Object for bi-directional Mapping
+		ProductCategory productcategory=productcategoryrepository.findOne(object.getLong("productcategory_ID"));
+		product.setPRODUCTCATEGORY_ID(productcategory);
+		productcategory.getProducts().add(product);
+		//Ended bi-directional mapping.
 		product.setPRODUCTIS_ACTIVE('Y');
 		productrepository.saveAndFlush(product);
 		return mapper.writeValueAsString(product);
@@ -85,16 +88,28 @@ public class productController {
 		ObjectMapper mapper=new ObjectMapper();
 		//Updation of product
 		Product product=productrepository.findOne(id);
-		if(object.has("name"))
-			product.setPRODUCT_NAME(object.getString("name"));
-		if(object.has("stock"))
-			product.setPRODUCT_STOCK(object.getDouble("stock"));
-		if(object.has("saleprice"))
-			product.setPRODUCT_STOCK(object.getDouble("saleprice"));
-		if(object.has("purprice"))
-			product.setPRODUCTPURCHASE_PRICE(object.getDouble("purprice"));
-		if(object.has("deactive"))
+		if(object.has("product_NAME"))
+			product.setPRODUCT_NAME(object.getString("product_NAME"));
+		if(object.has("product_STOCK"))
+			product.setPRODUCT_STOCK(object.getDouble("product_STOCK"));
+		if(object.has("product_PRICE"))
+			product.setPRODUCT_PRICE(object.getDouble("product_PRICE"));
+		if(object.has("product_DESCRIPTION"))
+			product.setPRODUCT_DESCRIPTION(object.getString("product_DESCRIPTION"));
+		if(object.has("productis_ACTIVE"))
 			product.setPRODUCTIS_ACTIVE('N');
+		//Using Product Category Object for bi-directional Mapping
+		if(object.has("productcategory_ID")) {
+			ProductCategory productcategory=productcategoryrepository.findOne(object.getLong("productcategory_ID"));
+			if(productcategory!=null){
+				ProductCategory prevproductcategory=product.getPRODUCTCATEGORY_ID();
+				prevproductcategory.getProducts().remove(product);
+				//Product saved in previous Product Category Removed.
+				product.setPRODUCTCATEGORY_ID(productcategory);
+				productcategory.getProducts().add(product);
+				//New category added using Bi-directional mapping.
+			}
+		}
 		product.setPRODUCTMODIFIED_BY(inetAddress.getHostName());
 		product.setPRODUCTMODIFIED_WORKSTATION(inetAddress.getHostAddress());
 		product.setPRODUCTMODIFIED_WHEN(dateFormatter.format(date));
@@ -129,9 +144,30 @@ public class productController {
 		JSONObject object=new JSONObject(data);
 		if(!object.has("search"))
 			return "Search string is missing";
-		ArrayList<Product> productlist=(ArrayList<Product>) productrepository.findAllBySearch(object.getString("search"));
+		List<Product> productlist=productrepository.findAllBySearch(object.getString("search"));
 		ObjectMapper mapper=new ObjectMapper();
 		String value=mapper.writeValueAsString(productlist);
+		return value;
+	}
+	
+//	Searching all records by advance search
+	
+	public String getByAdvacedSearch(@RequestBody String data) throws JsonProcessingException {
+		JSONObject object=new JSONObject(data);
+		if(!object.has("name"))
+			return "Search string is missing";
+		List<Product> list=productrepository.findByAdvancedSearch(object.getString("search"));
+		ObjectMapper mapper=new ObjectMapper();
+		String value=mapper.writeValueAsString(list);
+		return value;
+	}
+	public String getAllByAdvacedSearch(@RequestBody String data) throws JsonProcessingException {
+		JSONObject object=new JSONObject(data);
+		if(!object.has("name"))
+			return "Search string is missing";
+		List<Product> list=productrepository.findAllByAdvancedSearch(object.getString("search"));
+		ObjectMapper mapper=new ObjectMapper();
+		String value=mapper.writeValueAsString(list);
 		return value;
 	}
 	

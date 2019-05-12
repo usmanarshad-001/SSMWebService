@@ -1,12 +1,10 @@
 package com.management.ssm.repository;
 
-import java.util.List;
-
+import com.management.ssm.model.Staff;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-import com.management.ssm.model.Product;
-import com.management.ssm.model.Staff;
+import java.util.List;
 
 public interface staffRepository extends JpaRepository<Staff, Long> {
 	

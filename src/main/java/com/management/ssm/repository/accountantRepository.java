@@ -1,12 +1,10 @@
 package com.management.ssm.repository;
 
-import java.util.List;
-
+import com.management.ssm.model.Accountant;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-import com.management.ssm.model.Accountant;
-import com.management.ssm.model.Staff;
+import java.util.List;
 
 public interface accountantRepository extends JpaRepository<Accountant,Long>{
 	

@@ -1,14 +1,8 @@
 package com.management.ssm.model;
 
-import javax.persistence.*;
-
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import net.sourceforge.jtds.jdbc.DateTime;
 
-import java.util.HashSet;
-import java.util.Set;
+import javax.persistence.*;
 
 @Entity
 @Table(name="TBLSALE")

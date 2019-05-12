@@ -6,7 +6,6 @@ import com.management.ssm.model.Customer;
 import com.management.ssm.model.CustomerProduct;
 import com.management.ssm.model.Product;
 import com.management.ssm.repository.customerRepository;
-import com.management.ssm.repository.logRepository;
 import com.management.ssm.repository.productRepository;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,10 +1,10 @@
 package com.management.ssm.repository;
-import java.util.List;
 
+import com.management.ssm.model.Administrator;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-import com.management.ssm.model.Administrator;
+import java.util.List;
 
 public interface administratorRepository extends JpaRepository<Administrator,Long>{
 	@Query(value="select* from TBLADMINISTRATOR where ADMINIS_ACTIVE='Y'", nativeQuery=true)

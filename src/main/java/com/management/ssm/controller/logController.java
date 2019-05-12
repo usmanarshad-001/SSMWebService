@@ -2,7 +2,6 @@ package com.management.ssm.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.management.ssm.model.Customer;
 import com.management.ssm.model.Log;
 import com.management.ssm.repository.customerRepository;
 import com.management.ssm.repository.logRepository;
